@@ -1,3 +1,5 @@
+#include <Adafruit_NeoPixel.h>
+
 /*
 * TEAM AWESOME INF1510 arduino project
 * Members:
@@ -12,25 +14,31 @@
 * No functions should directly use the clock except for debouncing. We use the methods for reading a percentage, and then act accordingly. 
 */
 
-long startTime;
-long timeLimit; // milliseonds of what equals 100%. 
+unsigned long startTime;
+unsigned long timeLimit; // milliseonds of what equals 100%. 
 
-long debounceDelay = 50;
+unsigned long debounceDelay = 50;
 
 
 // reset button globals
 const int resetButton = 10; // some pin for the reset button. 
 int resetButtonState;
 int resetLastButtonState = LOW;
-long resetDebounceTime = 0;
+unsigned long resetDebounceTime = 0;
 
 // snooze button globals
 const int snoozeButton = 9; // some pin for the reset button. 
 int snoozeButtonState;
 int snoozeLastButtonState = LOW;
-long snoozeDebounceTime = 0;
+unsigned long snoozeDebounceTime = 0;
 
 int timePassed;
+
+
+// variables for the LEDstrip
+const int stripPIN = 6;
+const int stripLEDS = 11;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, stripPIN, NEO_GRB + NEO_KHZ800);
 
 
 
@@ -38,15 +46,30 @@ int timePassed;
 * We're at 100% Trigger their inner Marley, get up, stand up!
 */
 void reachedMax() {
+  setLighting(100, 255, 0, 0);
+  
+  // debugging
+  delay(1000);
+  resetTime();
+  
   // do some flashy stuff
 }
 
 /*
 * function that sets the light bar. Unsure of parameters yet. Guessing we take in color and percentage?
 * this function handles this specific lighting setup, so different hardware would presumably need a new version of this function
+* We always keep the first LED lit. This is done in setup. 
+* We use the variables:
+* strip = the ledstrip
+* stripPIN is 6 if needed
+* stripLEDS = number of utilized lEDs
 */
-void setLighting(int percent) {
-  int x = 0;
+void setLighting(int percent, int red, int blue, int green) {
+  int ceiling = (int) (percent * stripLEDS) / 100;
+  for(int i = 1; i <= ceiling; i++) {
+   strip.setPixelColor(i, strip.Color(red, blue, green));
+   strip.show(); 
+  }
   // do something
 }
 
@@ -59,7 +82,22 @@ void setLighting(int percent) {
 void updateBar(int timePassed) {
   // update led bar.
   // need to test
-  setLighting(timePassed);  
+  
+  setLighting(timePassed, 255, 255, 255); // white
+}
+
+
+/*
+* Setup function for the lightbar.
+*/
+void barSetup() {
+ strip.begin(); // ledstrip setup
+ for(int i = 1; i <= strip.numPixels(); i++) {
+   strip.setPixelColor(i, strip.Color(0, 0, 0));
+   strip.show();
+ }
+ strip.setPixelColor(0, strip.Color(255, 255, 255));
+ strip.show();
 }
 
 
@@ -97,7 +135,8 @@ void readSnoozeButton(int snoozeRead) {
 * return percentage of  time passed since reset. 
 */
 int getTimePassed() {
-  long diff = millis() - startTime; // gives us the difference
+  unsigned long diff = millis() - startTime; // gives us the difference
+  if(diff > timeLimit) return 100;
   return (int) (diff * 100) / timeLimit;
 }
 
@@ -106,25 +145,26 @@ void resetTime() {
   startTime = millis();
 }
 
-
-
 // Main setup function!
 void setup() {
   startTime = millis();
-  timeLimit = 30 * 60 * 1000; // 30 minutes. 30 minutes * 60 seconds * 1000 milli.
+  //timeLimit = 30 * 60 * 1000; // 30 minutes. 30 minutes * 60 seconds * 1000 milli.
+  timeLimit = 10 * 1000; // 10 seconds for testing
+  //Serial.begin(9600);
+  barSetup();
 }
-
 
 /* Main loop function!
 * - Checks for reset button push.
 * - check if at 100%. Call reachedMaxed
 */
 void loop() {
-  readResetButton(digitalRead(resetButton));
+  //readResetButton(digitalRead(resetButton));
+  //Serial.println(millis());
   timePassed = getTimePassed();
+  //Serial.println(timePassed);
   if(timePassed >= 100) {
     reachedMax();
-    return;
   }
   // less than 100%
   else {
