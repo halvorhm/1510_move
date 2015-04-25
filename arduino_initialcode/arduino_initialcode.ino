@@ -21,7 +21,7 @@ unsigned long debounceDelay = 50;
 
 
 // reset button globals
-const int resetButton = 10; // some pin for the reset button. 
+const int resetButton = 4; // some pin for the reset button. 
 int resetButtonState;
 int resetLastButtonState = LOW;
 unsigned long resetDebounceTime = 0;
@@ -122,11 +122,17 @@ void snoozeTime() {
 * Uses debounce, while the button is pressed it resets the timer. 
 */
 void readResetButton(int resetRead) {
-  if(resetRead != resetLastButtonState) resetDebounceTime = millis(); // reset debounce timer
+  // reset debounce timer
+  if(resetRead != resetLastButtonState) {
+    resetLastButtonState = resetRead;
+    resetDebounceTime = millis(); 
+  }
+  Serial.println(millis() - resetDebounceTime);
   if((millis() - resetDebounceTime) > debounceDelay) {
     // Holy crap, it's not just noise anymore. OH LAWD! WE MUST ACT!
-    if(resetRead != resetButtonState) resetButtonState = resetRead; // set what the button is
-    if(resetButtonState = HIGH) resetTime(); // reset if HIGH
+    //if(resetRead != resetButtonState) resetButtonState = resetRead; // set what the button is
+    resetButtonState = resetRead;
+    if(resetButtonState == HIGH) resetTime(); // reset if HIGH
   }
 }
 
@@ -174,7 +180,7 @@ void setup() {
   
   
   // debugging
-  //Serial.begin(9600);
+  Serial.begin(9600);
   
 }
 /* Main loop function!
@@ -182,9 +188,10 @@ void setup() {
 * - check if at 100%. Call reachedMaxed
 */
 void loop() {
-  //readResetButton(digitalRead(resetButton));
+  readResetButton(digitalRead(resetButton));
   //Serial.println(millis());
   timePassed = getTimePassed();
+  resetBar();
   //Serial.println(timePassed);
   
   
