@@ -32,6 +32,7 @@ int snoozeButtonState;
 int snoozeLastButtonState = LOW;
 unsigned long snoozeDebounceTime = 0;
 
+// percentage
 int timePassed;
 
 
@@ -47,12 +48,13 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, stripPIN, NEO_GRB + NEO_KHZ800);
 */
 void reachedMax() {
   setLighting(100, 255, 0, 0);
+  setFirst(255, 0, 0);
+  // do some flashy stuff
   
   // debugging
-  delay(1000);
+  delay(2000);
   resetTime();
-  
-  // do some flashy stuff
+  resetBar();
 }
 
 /*
@@ -72,6 +74,14 @@ void setLighting(int percent, int red, int blue, int green) {
   }
   // do something
 }
+
+
+// method for setting the first LED that's usually untouched. 
+void setFirst(int red, int blue, int green) {
+   strip.setPixelColor(0, strip.Color(red, blue, green));
+   strip.show(); 
+}
+
 
 /*
 * update stuff.
@@ -134,10 +144,14 @@ void readSnoozeButton(int snoozeRead) {
 * Formula is: (diff * 100) / timeLimit to get percentage. We just round down, no need for extreme precision. 
 * return percentage of  time passed since reset. 
 */
-int getTimePassed() {
+unsigned int getTimePassed() {
   unsigned long diff = millis() - startTime; // gives us the difference
   if(diff > timeLimit) return 100;
-  return (int) (diff * 100) / timeLimit;
+  
+  unsigned long result = diff * 100;
+  result /= timeLimit;
+  return (int) result;
+  //return (unsigned int) (diff * 100) / timeLimit;
 }
 
 // resets to 0%
@@ -145,15 +159,24 @@ void resetTime() {
   startTime = millis();
 }
 
+void resetBar() {
+  
+  // for now just whipe the bar and set the first one to initial color. 
+  barSetup();
+}
+
 // Main setup function!
 void setup() {
   startTime = millis();
   //timeLimit = 30 * 60 * 1000; // 30 minutes. 30 minutes * 60 seconds * 1000 milli.
   timeLimit = 10 * 1000; // 10 seconds for testing
-  //Serial.begin(9600);
   barSetup();
+  
+  
+  // debugging
+  //Serial.begin(9600);
+  
 }
-
 /* Main loop function!
 * - Checks for reset button push.
 * - check if at 100%. Call reachedMaxed
@@ -163,6 +186,8 @@ void loop() {
   //Serial.println(millis());
   timePassed = getTimePassed();
   //Serial.println(timePassed);
+  
+  
   if(timePassed >= 100) {
     reachedMax();
   }
@@ -170,4 +195,5 @@ void loop() {
   else {
     updateBar(timePassed);
   }
+  
 }
