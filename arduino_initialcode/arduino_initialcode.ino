@@ -47,8 +47,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, stripPIN, NEO_GRB + NEO_KHZ800);
 * We're at 100% Trigger their inner Marley, get up, stand up!
 */
 void reachedMax() {
-  setLighting(100, 255, 0, 0);
-  setFirst(255, 0, 0);
+  setLighting(100, 100, 0, 0);
+  setFirst(100, 0, 0);
   // do some flashy stuff
   
   // debugging
@@ -70,8 +70,10 @@ void setLighting(int percent, int red, int blue, int green) {
   int ceiling = (int) (percent * stripLEDS) / 100;
   for(int i = 1; i <= ceiling; i++) {
    strip.setPixelColor(i, strip.Color(red, blue, green));
-   strip.show(); 
+   //strip.show(); 
   }
+  //strip.setPixelColor(ceiling, strip.Color(red, blue, green));
+  strip.show();
   // do something
 }
 
@@ -93,7 +95,7 @@ void updateBar(int timePassed) {
   // update led bar.
   // need to test
   
-  setLighting(timePassed, 255, 255, 255); // white
+  setLighting(timePassed, 100, 100, 100); // white
 }
 
 
@@ -106,7 +108,7 @@ void barSetup() {
    strip.setPixelColor(i, strip.Color(0, 0, 0));
    strip.show();
  }
- strip.setPixelColor(0, strip.Color(255, 255, 255));
+ strip.setPixelColor(0, strip.Color(100, 100, 100));
  strip.show();
 }
 
@@ -191,7 +193,7 @@ void loop() {
   readResetButton(digitalRead(resetButton));
   //Serial.println(millis());
   timePassed = getTimePassed();
-  resetBar();
+  //resetBar();
   //Serial.println(timePassed);
   
   
