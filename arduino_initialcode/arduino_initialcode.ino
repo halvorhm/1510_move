@@ -15,7 +15,7 @@
 */
 
 unsigned long startTime;
-unsigned long timeLimit; // milliseonds of what equals 100%. 
+unsigned long timeLimit = (unsigned long) 60 * 1000; // milliseonds of what equals 100%. 
 
 unsigned long debounceDelay = 50;
 
@@ -27,10 +27,13 @@ int resetLastButtonState = LOW;
 unsigned long resetDebounceTime = 0;
 
 // snooze button globals
-const int snoozeButton = 9; // some pin for the reset button. 
+const int snoozeButton = 5; // some pin for the reset button. 
 int snoozeButtonState;
 int snoozeLastButtonState = LOW;
 unsigned long snoozeDebounceTime = 0;
+
+// offSwitch
+int offSwitch = 7;
 
 // percentage
 int timePassed;
@@ -52,9 +55,9 @@ void reachedMax() {
   // do some flashy stuff
   
   // debugging
-  delay(2000);
-  resetTime();
-  resetBar();
+  //delay(2000);
+  //resetTime();
+  //resetBar();
 }
 
 /*
@@ -80,7 +83,7 @@ void setLighting(int percent, int red, int blue, int green) {
 
 // method for setting the first LED that's usually untouched. 
 void setFirst(int red, int blue, int green) {
-   strip.setPixelColor(0, strip.Color(red, blue, green));
+   strip.setPixelColor(1, strip.Color(red, blue, green));
    strip.show(); 
 }
 
@@ -108,13 +111,15 @@ void barSetup() {
    strip.setPixelColor(i, strip.Color(0, 0, 0));
    strip.show();
  }
- strip.setPixelColor(0, strip.Color(100, 100, 100));
+ strip.setPixelColor(1, strip.Color(0, 100, 0));
  strip.show();
 }
 
 
 // Triggered when someonepushes the snooze button.
 void snoozeTime() {
+  //Serial.println(startTime);
+  startTime = (unsigned long) 0.1 * (unsigned long) (millis() - startTime);
   // do stuff
 }
 
@@ -129,16 +134,19 @@ void readResetButton(int resetRead) {
     resetLastButtonState = resetRead;
     resetDebounceTime = millis(); 
   }
-  Serial.println(millis() - resetDebounceTime);
   if((millis() - resetDebounceTime) > debounceDelay) {
     // Holy crap, it's not just noise anymore. OH LAWD! WE MUST ACT!
     //if(resetRead != resetButtonState) resetButtonState = resetRead; // set what the button is
     resetButtonState = resetRead;
-    if(resetButtonState == HIGH) resetTime(); // reset if HIGH
+    if(resetButtonState == HIGH) {
+      resetTime(); // reset if HIGH
+      resetBar();
+    }
   }
 }
 
 void readSnoozeButton(int snoozeRead) {
+  Serial.println(snoozeRead);
   if(snoozeRead != snoozeLastButtonState) snoozeDebounceTime = millis(); // reset debounce timer
   if((millis() - snoozeDebounceTime) > debounceDelay) {
     // Holy crap, it's not just noise anymore. OH LAWD! WE MUST ACT!
@@ -157,7 +165,10 @@ unsigned int getTimePassed() {
   if(diff > timeLimit) return 100;
   
   unsigned long result = diff * 100;
-  result /= timeLimit;
+  //Serial.println(result);
+  //Serial.println(timeLimit);
+  result = (unsigned long) result / (unsigned long) timeLimit;
+  //Serial.println(result);
   return (int) result;
   //return (unsigned int) (diff * 100) / timeLimit;
 }
@@ -171,13 +182,16 @@ void resetBar() {
   
   // for now just whipe the bar and set the first one to initial color. 
   barSetup();
+  //setFirst(0,100,0);
+}
+
+void off() {
+    resetBar();
 }
 
 // Main setup function!
 void setup() {
   startTime = millis();
-  //timeLimit = 30 * 60 * 1000; // 30 minutes. 30 minutes * 60 seconds * 1000 milli.
-  timeLimit = 10 * 1000; // 10 seconds for testing
   barSetup();
   
   
@@ -191,17 +205,23 @@ void setup() {
 */
 void loop() {
   readResetButton(digitalRead(resetButton));
+  readSnoozeButton(digitalRead(snoozeButton));
+  if(digitalRead(offSwitch) == LOW) {
+    off();
+    resetTime();
+    return;
+  }
   //Serial.println(millis());
   timePassed = getTimePassed();
   //resetBar();
   //Serial.println(timePassed);
   
-  
   if(timePassed >= 100) {
     reachedMax();
-  }
+  } else if(timePassed <= 2) {
+    setFirst(0,100,0);
   // less than 100%
-  else {
+  } else {
     updateBar(timePassed);
   }
   
