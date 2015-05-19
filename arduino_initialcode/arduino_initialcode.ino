@@ -1,4 +1,4 @@
-#include <Adafruit_NeoPixel.h>
+ #include <Adafruit_NeoPixel.h>
 
 /*
 * TEAM AWESOME INF1510 arduino project
@@ -15,7 +15,7 @@
 */
 
 unsigned long startTime;
-unsigned long timeLimit = (unsigned long) 60 * 1000; // milliseonds of what equals 100%. 
+unsigned long timeLimit = (unsigned long) 20 * 60 * 1000; // milliseonds of what equals 100%. 
 
 unsigned long debounceDelay = 50;
 
@@ -146,7 +146,6 @@ void readResetButton(int resetRead) {
 }
 
 void readSnoozeButton(int snoozeRead) {
-  Serial.println(snoozeRead);
   if(snoozeRead != snoozeLastButtonState) snoozeDebounceTime = millis(); // reset debounce timer
   if((millis() - snoozeDebounceTime) > debounceDelay) {
     // Holy crap, it's not just noise anymore. OH LAWD! WE MUST ACT!
@@ -181,7 +180,11 @@ void resetTime() {
 void resetBar() {
   
   // for now just whipe the bar and set the first one to initial color. 
-  barSetup();
+  //barSetup();
+   for(int i = 1; i <= strip.numPixels(); i++) {
+     strip.setPixelColor(i, strip.Color(0, 0, 0));
+     strip.show();
+   }
   //setFirst(0,100,0);
 }
 
@@ -194,6 +197,11 @@ void setup() {
   startTime = millis();
   barSetup();
   
+  pinMode(snoozeButton, INPUT);
+  pinMode(resetButton, INPUT);
+  pinMode(offSwitch, INPUT);
+  pinMode(stripPIN, OUTPUT);
+  
   
   // debugging
   Serial.begin(9600);
@@ -205,7 +213,8 @@ void setup() {
 */
 void loop() {
   readResetButton(digitalRead(resetButton));
-  readSnoozeButton(digitalRead(snoozeButton));
+  //readSnoozeButton(digitalRead(snoozeButton));
+  Serial.println(digitalRead(resetButton));
   if(digitalRead(offSwitch) == LOW) {
     off();
     resetTime();
