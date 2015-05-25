@@ -19,6 +19,11 @@ unsigned long timeLimit = (unsigned long) 20 * 60 * 1000; // milliseonds of what
 
 unsigned long debounceDelay = 50;
 
+int third = 33;
+int thirdDone = false;
+int twothirdsDone = false;
+int twothirds = 66;
+
 
 // reset button globals
 const int resetButton = 4; // some pin for the reset button. 
@@ -115,6 +120,28 @@ void barSetup() {
  strip.show();
 }
 
+void pulse(int pulseCount) {
+ int i = 100;
+  for(; i >= 50; i--) {
+    for(int j = 0; j <= pulseCount; j++) {
+      strip.setPixelColor(j, strip.Color(i, i, i));
+    }
+    strip.show();
+  }
+  for(; i <= 150; i++) {
+    for(int j = 0; j <= pulseCount; j++) {
+      strip.setPixelColor(j, strip.Color(i, i, i));
+    }
+    strip.show();
+  }
+  for(; i >= 100; i--) {
+    for(int j = 0; j <= pulseCount; j++) {
+      strip.setPixelColor(j, strip.Color(i, i, i));
+    }
+    strip.show();
+  } 
+}
+
 
 // Triggered when someonepushes the snooze button.
 void snoozeTime() {
@@ -178,7 +205,8 @@ void resetTime() {
 }
 
 void resetBar() {
-  
+  thirdDone = false;
+  twothirdsDone = false;
   // for now just whipe the bar and set the first one to initial color. 
   //barSetup();
    for(int i = 1; i <= strip.numPixels(); i++) {
@@ -230,6 +258,12 @@ void loop() {
   } else if(timePassed <= 2) {
     setFirst(0,100,0);
   // less than 100%
+  } else if (timePassed == 33 && !thirdDone) {
+    thirdDone = true;
+    pulse(third);
+  } else if (timePassed = 66 && !twothirdsDone) {
+    twothirdsDone = true;
+    pulse(twothirds);
   } else {
     updateBar(timePassed);
   }
