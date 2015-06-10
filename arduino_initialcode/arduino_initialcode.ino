@@ -50,24 +50,19 @@ const int stripLEDS = 11;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, stripPIN, NEO_GRB + NEO_KHZ800);
 
 
-
 /*
 * We're at 100% Trigger their inner Marley, get up, stand up!
 */
 void reachedMax() {
+  // do some flashy stuff
+  // prototype, set the whole bar red. 
   setLighting(100, 100, 0, 0);
   setFirst(100, 0, 0);
-  // do some flashy stuff
-  
-  // debugging
-  //delay(2000);
-  //resetTime();
-  //resetBar();
 }
 
 /*
-* function that sets the light bar. Unsure of parameters yet. Guessing we take in color and percentage?
-* this function handles this specific lighting setup, so different hardware would presumably need a new version of this function
+* function that sets the light bar.
+* this function handles this specific lighting setup, so different hardware would necessarily need a new version of this function
 * We always keep the first LED lit. This is done in setup. 
 * We use the variables:
 * strip = the ledstrip
@@ -77,16 +72,15 @@ void reachedMax() {
 void setLighting(int percent, int red, int blue, int green) {
   int ceiling = (int) (percent * stripLEDS) / 100;
   for(int i = 1; i <= ceiling; i++) {
-   strip.setPixelColor(i, strip.Color(red, blue, green));
-   //strip.show(); 
+   strip.setPixelColor(i, strip.Color(red, blue, green)); 
   }
-  //strip.setPixelColor(ceiling, strip.Color(red, blue, green));
-  strip.show();
-  // do something
+  strip.show(); // this does the actual update on the 
 }
 
 
-// method for setting the first LED that's usually untouched. 
+/* Method for setting the first LED that's usually untouched. 
+*  
+*/
 void setFirst(int red, int blue, int green) {
    strip.setPixelColor(1, strip.Color(red, blue, green));
    strip.show(); 
@@ -97,12 +91,9 @@ void setFirst(int red, int blue, int green) {
 * update stuff.
 * update led bar with size and maybe color. 
 * if logging update time passed to necessary outputs in whatever format we need. 
-* 
 */
 void updateBar(int timePassed) {
   // update led bar.
-  // need to test
-  
   setLighting(timePassed, 100, 100, 100); // white
 }
 
@@ -120,6 +111,11 @@ void barSetup() {
  strip.show();
 }
 
+
+/*
+* Gives the lightbar a pulsating effect. Takes the number of LEDs to use as an argument. 
+* Used to make the user more aware of the bar at a given time. 
+*/
 void pulse(int pulseCount) {
  int i = 100;
   for(; i >= 50; i--) {
@@ -143,11 +139,9 @@ void pulse(int pulseCount) {
 }
 
 
-// Triggered when someonepushes the snooze button.
+// Triggered when someone pushes the snooze button.
 void snoozeTime() {
-  //Serial.println(startTime);
   startTime = (unsigned long) 0.1 * (unsigned long) (millis() - startTime);
-  // do stuff
 }
 
 
@@ -162,8 +156,7 @@ void readResetButton(int resetRead) {
     resetDebounceTime = millis(); 
   }
   if((millis() - resetDebounceTime) > debounceDelay) {
-    // Holy crap, it's not just noise anymore. OH LAWD! WE MUST ACT!
-    //if(resetRead != resetButtonState) resetButtonState = resetRead; // set what the button is
+    // Not just noise anymore, act
     resetButtonState = resetRead;
     if(resetButtonState == HIGH) {
       resetTime(); // reset if HIGH
@@ -172,6 +165,9 @@ void readResetButton(int resetRead) {
   }
 }
 
+/*
+* handles snooze button
+*/
 void readSnoozeButton(int snoozeRead) {
   if(snoozeRead != snoozeLastButtonState) snoozeDebounceTime = millis(); // reset debounce timer
   if((millis() - snoozeDebounceTime) > debounceDelay) {
@@ -191,12 +187,8 @@ unsigned int getTimePassed() {
   if(diff > timeLimit) return 100;
   
   unsigned long result = diff * 100;
-  //Serial.println(result);
-  //Serial.println(timeLimit);
   result = (unsigned long) result / (unsigned long) timeLimit;
-  //Serial.println(result);
   return (int) result;
-  //return (unsigned int) (diff * 100) / timeLimit;
 }
 
 // resets to 0%
@@ -208,14 +200,13 @@ void resetBar() {
   thirdDone = false;
   twothirdsDone = false;
   // for now just whipe the bar and set the first one to initial color. 
-  //barSetup();
    for(int i = 1; i <= strip.numPixels(); i++) {
      strip.setPixelColor(i, strip.Color(0, 0, 0));
      strip.show();
    }
-  //setFirst(0,100,0);
 }
 
+// when the offswitch is set to off
 void off() {
     resetBar();
 }
@@ -230,42 +221,38 @@ void setup() {
   pinMode(offSwitch, INPUT);
   pinMode(stripPIN, OUTPUT);
   
-  
   // debugging
   Serial.begin(9600);
   
 }
 /* Main loop function!
-* - Checks for reset button push.
-* - check if at 100%. Call reachedMaxed
 */
 void loop() {
   readResetButton(digitalRead(resetButton));
   //readSnoozeButton(digitalRead(snoozeButton));
-  Serial.println(digitalRead(resetButton));
   if(digitalRead(offSwitch) == LOW) {
     off();
     resetTime();
     return;
   }
-  //Serial.println(millis());
   timePassed = getTimePassed();
-  //resetBar();
-  //Serial.println(timePassed);
   
   if(timePassed >= 100) {
     reachedMax();
+   // set the first green in the start
   } else if(timePassed <= 2) {
     setFirst(0,100,0);
   // less than 100%
+  // check to pulse
   } else if (timePassed == 33 && !thirdDone) {
     thirdDone = true;
     pulse(third);
+    // check to pulse
   } else if (timePassed = 66 && !twothirdsDone) {
     twothirdsDone = true;
     pulse(twothirds);
   } else {
+    // else normal update
     updateBar(timePassed);
   }
-  
 }
